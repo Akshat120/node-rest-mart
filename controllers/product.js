@@ -70,3 +70,66 @@ exports.get_by_id = function (req, res) {
       });
     });
 };
+
+exports.update_by_id = function (req, res) {
+  updateOps = {};
+  for (const element of req.body) {
+    updateOps[element.propName] = element.value;
+  }
+
+  Product.updateOne({ _id: req.params.id }, { $set: updateOps })
+    .then((result) => {
+      if (result.matchedCount == 0) {
+        res.status(404).json({
+          msg: "Product Not Found",
+          request: {
+            type: "GET",
+            url: "http://localhost:3000/products",
+          },
+        });
+      } else {
+        res.status(200).json({
+          msg: "product updated",
+          request: {
+            type: "GET",
+            url: "http://localhost:3000/products/" + req.params.id,
+          },
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({
+        error: err,
+      });
+    });
+};
+
+exports.delete_by_id = function (req, res) {
+  Product.deleteOne({ _id: req.params.id })
+    .then((result) => {
+      if (result.deletedCount == 0) {
+        res.status(404).json({
+          msg: "Product Not Found",
+          request: {
+            type: "GET",
+            url: "http://localhost:3000/products",
+          },
+        });
+      } else {
+        res.status(200).json({
+          msg: "product deleted",
+          request: {
+            type: "GET",
+            url: "http://localhost:3000/products/",
+          },
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({
+        error: err,
+      });
+    });
+};
