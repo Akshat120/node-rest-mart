@@ -3,6 +3,7 @@ const Customer = require("../models/customer");
 const Cart = require("../models/cart");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const secureToken = require("../middlewares/secureToken");
 
 exports.signup = function (req, res) {
   Customer.findOne({
@@ -43,10 +44,11 @@ exports.signup = function (req, res) {
                         expiresIn: "1h",
                       }
                     );
-
+                    res.cookie("token", secureToken.get_ciphertoken(token), {
+                      maxAge: 400000,
+                    });
                     res.status(201).json({
                       msg: "User Created",
-                      token: token,
                       request: {
                         type: "GET",
                         url: "http://localhost:3000/customer/",
@@ -101,10 +103,11 @@ exports.login = function (req, res) {
               expiresIn: "1h",
             }
           );
-          req.user = {
-            id: cust_result._id,
-            name: cust_result.name,
-          };
+
+          res.cookie("token", secureToken.get_ciphertoken(token), {
+            maxAge: 400000,
+          });
+
           res.status(200).json({
             msg: "login success",
             token: token,
@@ -121,20 +124,35 @@ exports.login = function (req, res) {
 };
 
 exports.delete = function (req, res) {
-  Customer.deleteOne({
+  Customer.findOne({
     _id: req.user.id,
   })
-    .then((result) => {
-      console.log(result);
-      if (result.deletedCount) {
-        res.status(200).json({
-          msg: "User deleted.",
-          request: {
-            type: "GET",
-            url: "http://localhost:3000/products",
-          },
+    .then((cust_result) => {
+      Cart.deleteOne({ _id: cust_result.cart_id })
+        .then((result) => {
+          if (result.deletedCount == 0) {
+            return res.status(404).json({
+              msg: "User not exists",
+            });
+          }
+          Customer.deleteOne({ _id: cust_result._id }).then((result) => {
+            if (result.deletedCount) {
+              res.status(200).json({
+                msg: "User deleted.",
+                request: {
+                  type: "GET",
+                  url: "http://localhost:3000/products",
+                },
+              });
+            }
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+          res.status(500).json({
+            error: err,
+          });
         });
-      }
     })
     .catch((err) => {
       console.log(err);
@@ -150,6 +168,11 @@ exports.dashboard = function (req, res) {
       if (!result) {
         res.status(404).json({
           msg: "User Not Exist",
+          request: {
+            type: "POST",
+            url: "http://localhost:3000/customer/",
+            body: { name: "String", mobile: "String", password: "String" },
+          },
         });
       } else {
         res.status(200).json({
@@ -171,6 +194,19 @@ exports.help = function (req, res) {
   });
 };
 
-exports.readcart = function (req, res) {};
+exports.readcart = function (req, res) {
+  res.status(200).json({
+    msg: "cart fetched.",
+  });
+};
 
-exports.updatecart = function (req, res) {};
+exports.updatecart = function (req, res) {
+  res.status(200).json({
+    msg: "cart updated.",
+  });
+};
+
+exports.logout = function (req, res) {
+  res.clearCookie("token");
+  res.redirect("/products");
+};

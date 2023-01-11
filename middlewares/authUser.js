@@ -1,10 +1,10 @@
 const jwt = require("jsonwebtoken");
+const secureToken = require("../middlewares/secureToken");
 require("dotenv").config();
 
 function authUser(req, res, next) {
-  console.log(req.headers.authorization);
-  if (req.headers.authorization && req.headers.authorization.split(" ")[1]) {
-    const token = req.headers.authorization.split(" ")[1];
+  if (req.cookies.token) {
+    const token = secureToken.get_plaintoken(req.cookies.token);
     jwt.verify(token, process.env.JWTKEY, (err, decoded) => {
       if (err) {
         res.status(500).json({
