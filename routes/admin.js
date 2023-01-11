@@ -1,11 +1,11 @@
 const express = require("express");
-
+const controller = require("../controllers/admin");
+const authUser = require("../middlewares/authUser");
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.status(200).json({
-    message: "admin dashboard",
-  });
-});
+router.get("/", authUser, controller.dashboard);
+router.post("/signup", authUser, controller.signup);
+
+router.post("/login", controller.login);
 
 module.exports = router;
