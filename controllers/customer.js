@@ -110,7 +110,6 @@ exports.login = function (req, res) {
 
           res.status(200).json({
             msg: "login success",
-            token: token,
           });
         }
       });
