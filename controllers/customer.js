@@ -38,7 +38,11 @@ exports.signup = function (req, res) {
                   .save()
                   .then((cust_result) => {
                     const token = jwt.sign(
-                      { id: cust_result._id, name: cust_result.name },
+                      {
+                        id: cust_result._id,
+                        name: cust_result.name,
+                        cid: cust_result.cart_id,
+                      },
                       process.env.JWTKEY,
                       {
                         expiresIn: "1h",
@@ -97,7 +101,11 @@ exports.login = function (req, res) {
           });
         } else {
           const token = jwt.sign(
-            { id: cust_result._id, name: cust_result.name },
+            {
+              id: cust_result._id,
+              name: cust_result.name,
+              cid: cust_result.cart_id,
+            },
             process.env.JWTKEY,
             {
               expiresIn: "1h",

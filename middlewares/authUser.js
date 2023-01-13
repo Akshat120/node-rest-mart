@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const Customer = require("../models/customer");
 const secureToken = require("../middlewares/secureToken");
 require("dotenv").config();
 
@@ -12,8 +13,22 @@ function authUser(req, res, next) {
         });
       } else {
         if (decoded) {
-          req.user = decoded;
-          next();
+          Customer.findById(decoded.id)
+            .then((result) => {
+              if (!result) {
+                return res.status(401).json({
+                  msg: "Unauthoized User",
+                });
+              }
+              req.user = decoded;
+              next();
+            })
+            .catch((err) => {
+              console.log(err);
+              res.status(500).json({
+                error: err,
+              });
+            });
         } else {
           res.status(401).json({
             msg: "Unauthoized token invalid",
